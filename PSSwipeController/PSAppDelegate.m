@@ -24,6 +24,10 @@
     [[redController view] setBackgroundColor:[UIColor redColor]];
     [swipeViewController setLeftViewController:redController];
     
+    UIViewController *greenController = [UIViewController new];
+    [[greenController view] setBackgroundColor:[UIColor greenColor]];
+    [swipeViewController setRightViewController:greenController];
+    
     [[self window] makeKeyAndVisible];
     return YES;
 }

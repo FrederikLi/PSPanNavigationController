@@ -62,31 +62,40 @@ static inline void ps_UIViewSetFrameOriginX(UIView *view, CGFloat originX) {
         _leftContainerView = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
         
         _rightContainerView = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-        ps_UIViewSetFrameOriginX(_rightContainerView, CGRectGetMaxX([_centerContainerView frame]));
     }
     return self;
 }
 
 - (void)loadView
 {
-    _scrollView = [[UIScrollView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    UIView *view = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    
+    [view addSubview:_leftContainerView];
+    [view addSubview:_rightContainerView];
+    
+    _scrollView = [[UIScrollView alloc] initWithFrame:[view bounds]];
     [_scrollView setShowsHorizontalScrollIndicator:NO];
     [_scrollView setShowsVerticalScrollIndicator:NO];
     [_scrollView setBounces:NO];
     [_scrollView setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
     [_scrollView setDelegate:self];
-    [self setView:_scrollView];
+    [_scrollView addSubview:_centerContainerView];
+    [view addSubview:_scrollView];
+    
+    [self setView:view];
 }
 
 - (void)viewDidLoad
 {
-    [_scrollView addSubview:_leftContainerView];
-    [_scrollView addSubview:_rightContainerView];
-    [_scrollView addSubview:_centerContainerView];
-    
     CGSize contentSize = CGSizeMake(_maxVisibleWidthForLeftViewController + _maxVisibleWidthForRightViewController + CGRectGetWidth([_scrollView bounds]), CGRectGetHeight([_scrollView bounds]));
     [_scrollView setContentSize:contentSize];
     [_scrollView setContentOffset:CGPointMake(_maxVisibleWidthForLeftViewController, 0.0f) animated:NO];
+}
+
+- (void)viewWillLayoutSubviews
+{
+    [super viewWillLayoutSubviews];
+    ps_UIViewSetFrameOriginX(_rightContainerView, CGRectGetWidth([_rightContainerView frame]) - [self maxVisibleWidthForRightViewController]);
 }
 
 #pragma mark - Accessors
@@ -170,6 +179,18 @@ static inline void ps_UIViewSetFrameOriginX(UIView *view, CGFloat originX) {
 }
 
 #pragma mark - UIScrollViewDelegate Methods
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    if ([scrollView contentOffset].x < CGRectGetMinX([_centerContainerView frame]))
+    {
+        [[self view] sendSubviewToBack:_rightContainerView];
+    }
+    else
+    {
+        [[self view] sendSubviewToBack:_leftContainerView];
+    }
+}
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
 {
